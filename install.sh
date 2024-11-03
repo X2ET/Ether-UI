@@ -136,6 +136,52 @@ gen_random_string() {
     echo "$random_string"
 }
 
+# Function to check TLS certificates and prompt user for action
+check_tls_certificate() {
+    local cert_path="/etc/ssl/certs/selfsigned.crt"  # Path for the certificate
+    local key_path="/etc/ssl/private/selfsigned.key"  # Path for the private key
+
+    # Check if the certificate and key exist
+    if [[ ! -f "$cert_path" || ! -f "$key_path" ]]; then
+        echo "No TLS certificate and key found."
+        echo "Please choose an action:"
+        echo "1. Generate a self-signed certificate"
+        echo "2. Use SSH port forwarding"
+        read -p "Enter your choice (1 or 2): " choice
+        
+        case "$choice" in
+            1)
+                echo "Generating self-signed certificate with random details..."
+                local random_country=$(generate_random_string 2)
+                local random_state=$(generate_random_string 10)
+                local random_location=$(generate_random_string 10)
+                local random_organization=$(generate_random_string 15)
+                local random_unit=$(generate_random_string 10)
+                local random_cn=$(generate_random_string 10)
+
+                openssl req -x509 -nodes -days 365 -newkey rsa:2048 \
+                    -keyout "$key_path" -out "$cert_path" \
+                    -subj "/C=$random_country/ST=$random_state/L=$random_location/O=$random_organization/OU=$random_unit/CN=$random_cn"
+                echo "Self-signed certificate generated at: $cert_path and $key_path"
+                ;;
+            2)
+                echo "Please use the following SSH port forwarding command:"
+                local server_ip=$(curl -s https://api.ipify.org)
+                echo "ssh -L 2222:localhost:54321 root@$server_ip"
+                echo "After connecting, access the panel at: http://localhost:2222"
+                ;;
+            *)
+                echo "Invalid option. Exiting."
+                exit 1
+                ;;
+        esac
+    else
+        echo "TLS certificate and key already exist. Continuing installation..."
+    fi
+}
+
+
+
 config_after_install() {
     local existing_username=$(/usr/local/x-ui/x-ui setting -show true | grep -Eo 'username: .+' | awk '{print $2}')
     local existing_password=$(/usr/local/x-ui/x-ui setting -show true | grep -Eo 'password: .+' | awk '{print $2}')
@@ -287,6 +333,8 @@ install_x-ui() {
 }
 
 echo -e "${green}Running...${plain}"
+# Call the function to check TLS certificates
+check_tls_certificate
 install_dependencies
 install_x-ui $1
 
