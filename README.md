@@ -1,5 +1,5 @@
 # Ether-UI
-**An Advanced Web Panel • Built on Xray Core**
+**An Advanced Web Panel • Built on Xray Core • Hard Fork of X-UI**
 
 ![](https://img.shields.io/github/v/release/Etheray/Ether-UI.svg)
 [![Go Report Card](https://goreportcard.com/badge/github.com/Etheray/Ether-UI)](https://goreportcard.com/report/github.com/Etheray/Ether-UI)
